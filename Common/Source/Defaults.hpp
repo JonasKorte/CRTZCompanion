@@ -18,6 +18,9 @@ static constexpr int CLIENT_PORT = 55088;
 static constexpr int SANDBOX_PLUGIN_PORT = 56056;
 static constexpr int PLUGIN_TRAY_PORT = 55055;
 
+/** Connection timeout in ms for TCP server/worker (allows WAN latency when using port forwarding). */
+static constexpr int SERVER_CONNECT_TIMEOUT_MS = 5000;
+
 static const String SANDBOX_CMD_PREFIX = "sandbox";
 
 static const String SANDBOX_PLUGIN_SOCK = "sandbox-plugin-{n}.sock";

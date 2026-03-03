@@ -38,6 +38,12 @@ if(AG_SDKS_ROOT)
   set(AG_PLUGINHOST_VST 1)
 endif()
 
+if(AG_ENABLE_UPNP AND MINIUPNPC_FOUND)
+  target_compile_definitions(AudioGridderServer PRIVATE AG_ENABLE_UPNP=1)
+  target_include_directories(AudioGridderServer PRIVATE ${MINIUPNPC_INCLUDE_DIRS})
+  target_link_libraries(AudioGridderServer PRIVATE ${MINIUPNPC_LIBRARIES})
+  target_link_directories(AudioGridderServer PRIVATE ${MINIUPNPC_LIBRARY_DIRS})
+endif()
 target_compile_definitions(AudioGridderServer PRIVATE
   AG_SERVER
   AG_SENTRY_ENABLED=${AG_SENTRY_ENABLED}

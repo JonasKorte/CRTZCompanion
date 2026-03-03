@@ -169,7 +169,7 @@ bool ServiceReceiver::updateServers() {
 bool ServiceReceiver::isReachable(const ServerInfo& srv) {
     auto now = Time::currentTimeMillis();
     String host = srv.getHost();
-    int port = Defaults::SERVER_PORT + srv.getID();
+    int port = srv.getPortOverride() > 0 ? srv.getPortOverride() : (Defaults::SERVER_PORT + srv.getID());
     String key = host + String(port);
     if (m_lastReachableChecks.count(key) == 0 || m_lastReachableChecks[key] + 30000 < now) {
         StreamingSocket sock;

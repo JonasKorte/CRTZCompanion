@@ -26,6 +26,7 @@ class NewServerWindow : public TopLevelWindow, public TextButton::Listener {
     void activeWindowStatusChanged() override;
 
   private:
+    Label m_serverLabel;
     TextEditor m_server;
     TextButton m_ok;
     TextButton m_cancel;

@@ -60,6 +60,18 @@ brew install audiogridder-server
 - Generic Plugin Parameter Editor
 - Automation
 
+# Using over the internet (port forwarding)
+
+You can use AudioGridder when the plugin and server are on different networks (e.g. server at home, DAW elsewhere):
+
+1. **Add the server in the plugin**: Open **Servers → Add** and enter the server’s **public IP or hostname** (e.g. from a dynamic DNS service). Optional format: `hostname:0:DisplayName` (id `0` means server port 55056).
+2. **Forward ports on the server’s router**: Forward **TCP** ports to the machine running the AudioGridder server:
+   - **55056** (main server)
+   - **55088–56088** (worker ports). If your server uses a different worker port range, forward that range instead.
+3. Use a **dynamic DNS** service if the server’s public IP changes.
+
+**Optional – automatic port mapping:** Build the server with UPnP support (`-DAG_ENABLE_UPNP=ON`) and install libminiupnpc. The server will then try to open the required ports on your router automatically when it starts.
+
 # Compatibility
 
 - Server: macOS 10.7+, Windows 7+

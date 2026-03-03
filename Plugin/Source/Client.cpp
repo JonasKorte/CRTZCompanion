@@ -330,7 +330,10 @@ void Client::init() {
     traceScope();
     auto srvInfo = getServer();
     bool useUnixDomain = srvInfo.getLocalMode() && Defaults::unixDomainSocketsSupported();
-    int port = Defaults::SERVER_PORT + srvInfo.getID();
+    int port = srvInfo.getPortOverride() > 0 ? srvInfo.getPortOverride()
+                                               : (Defaults::SERVER_PORT + srvInfo.getID());
+    int workerPortOffset =
+        (srvInfo.getPortOverride() > 0) ? (srvInfo.getPortOverride() - Defaults::SERVER_PORT) : 0;
 
     LockByID lock(*this, INIT2);
 
@@ -354,7 +357,7 @@ void Client::init() {
 
     if (!m_cmdOut->isConnected()) {
         logln("connecting server: " << srvInfo.getHostAndID());
-        m_cmdOut->connect(srvInfo.getHost(), port, 1000);
+        m_cmdOut->connect(srvInfo.getHost(), port, Defaults::SERVER_CONNECT_TIMEOUT_MS);
     }
 
     if (m_cmdOut->isConnected()) {
@@ -399,8 +402,9 @@ void Client::init() {
             logln("connecting worker: " << workerSocketPath.getFullPathName());
             m_cmdOut->connect(workerSocketPath);
         } else {
-            logln("connecting worker: " << srvInfo.getHost() << ":" << resp.port);
-            m_cmdOut->connect(srvInfo.getHost(), resp.port);
+            int workerPort = resp.port + workerPortOffset;
+            logln("connecting worker: " << srvInfo.getHost() << ":" << workerPort);
+            m_cmdOut->connect(srvInfo.getHost(), workerPort, Defaults::SERVER_CONNECT_TIMEOUT_MS);
         }
 
         if (!m_cmdOut->isConnected()) {
@@ -410,7 +414,9 @@ void Client::init() {
         }
 
         m_cmdIn = std::make_unique<StreamingSocket>();
-        if (useUnixDomain ? !m_cmdIn->connect(workerSocketPath) : !m_cmdIn->connect(srvInfo.getHost(), resp.port)) {
+        if (useUnixDomain ? !m_cmdIn->connect(workerSocketPath)
+                          : !m_cmdIn->connect(srvInfo.getHost(), resp.port + workerPortOffset,
+                                             Defaults::SERVER_CONNECT_TIMEOUT_MS)) {
             logln("failed to setup command receive connection");
             m_cmdIn.reset();
         }
@@ -418,7 +424,9 @@ void Client::init() {
 
         StreamingSocket* audioSock = nullptr;
         audioSock = new StreamingSocket;
-        if (useUnixDomain ? !audioSock->connect(workerSocketPath) : !audioSock->connect(srvInfo.getHost(), resp.port)) {
+        if (useUnixDomain ? !audioSock->connect(workerSocketPath)
+                          : !audioSock->connect(srvInfo.getHost(), resp.port + workerPortOffset,
+                                               Defaults::SERVER_CONNECT_TIMEOUT_MS)) {
             logln("failed to setup audio connection");
             delete audioSock;
             audioSock = nullptr;
@@ -426,7 +434,8 @@ void Client::init() {
 
         m_screenSocket = std::make_unique<StreamingSocket>();
         if (useUnixDomain ? !m_screenSocket->connect(workerSocketPath)
-                          : !m_screenSocket->connect(srvInfo.getHost(), resp.port)) {
+                          : !m_screenSocket->connect(srvInfo.getHost(), resp.port + workerPortOffset,
+                                                    Defaults::SERVER_CONNECT_TIMEOUT_MS)) {
             logln("failed to setup screen connection");
             m_screenSocket.reset();
         }

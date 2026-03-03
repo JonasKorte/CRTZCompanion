@@ -15,6 +15,7 @@
 #include "ChannelSet.hpp"
 #include "Sentry.hpp"
 #include "Processor.hpp"
+#include "PortForwarding.hpp"
 
 #ifdef JUCE_MAC
 #include <sys/socket.h>
@@ -1206,6 +1207,11 @@ void Server::runServer() {
     logln("creating listener " << (m_host.length() == 0 ? "*" : m_host) << ":" << (m_port + getId()));
     if (m_masterSocket.createListener6(m_port + getId(), m_host)) {
         logln("server started: ID=" << getId() << ", PORT=" << m_port + getId() << ", NAME=" << m_name);
+        if (m_host.isEmpty()) {
+            int workerStart = getOpt("workerPort", Defaults::CLIENT_PORT);
+            int workerEnd = getOpt("workerPortMax", Defaults::CLIENT_PORT + 1000);
+            tryMapPorts(m_port + getId(), workerStart, workerEnd);
+        }
         while (!threadShouldExit()) {
             StreamingSocket* clnt = nullptr;
             bool isLocal = false;
